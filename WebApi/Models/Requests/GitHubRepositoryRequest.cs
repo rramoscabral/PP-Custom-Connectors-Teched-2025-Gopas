@@ -5,7 +5,7 @@ namespace MyAppDemo.WebAPI.Models.Requests;
 /// </summary>
 public class GitHubRepositoryRequest
 {
-    public string OwnerName { get; set; }
-    public string RepositoryName { get; set; }
-    public string Email { get; set; }
+    public required string OwnerName { get; set; }
+    public required string RepositoryName { get; set; }
+    public required string Email { get; set; }
 }

@@ -5,7 +5,7 @@ namespace MyAppDemo.WebAPI.Models.Requests;
 /// </summary>
 public class WebhookRegistrationRequest
 {
-    public string Email { get; set; }
-    public string WebhookUrl { get; set; }
-    public string FlowId { get; set; }
+    public required string Email { get; set; }
+    public required string WebhookUrl { get; set; }
+    public string? FlowId { get; set; }
 }

@@ -70,7 +70,7 @@ public class GitHubController : ControllerBase
 
 
 
-        /// <summary>
+    /// <summary>
     /// Endpoint to register a Custom Connectors for GitHub.
     /// </summary>
     /// <param name="request"></param>

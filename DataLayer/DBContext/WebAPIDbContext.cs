@@ -17,7 +17,6 @@ public class WebAPIDbContext : DbContext
     public DbSet<GitHubRepository> GitHubRepositories { get; set; }
     public DbSet<AuthorizedEmail> AuthorizedEmails { get; set; }
 
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

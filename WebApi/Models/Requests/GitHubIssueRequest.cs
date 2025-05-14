@@ -1,4 +1,5 @@
-namespace MyAppDemo.WebAPI.Models.Requests;
+using System.ComponentModel.DataAnnotations;
+
 
 
 /// <summary>
@@ -6,7 +7,7 @@ namespace MyAppDemo.WebAPI.Models.Requests;
 /// </summary>
 public class GitHubIssueRequest
 {
-    public string RepositoryOwner { get; set; }
-    public string RepositoryName { get; set; }
-    public object Issue { get; set; }
+    public required string RepositoryOwner { get; set; }
+    public required string RepositoryName { get; set; }
+    public required object Issue { get; set; }
 }

@@ -21,4 +21,10 @@ public class AuthorizedEmail
     public ServiceType Service { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+
+    [Required]
+    [StringLength(100)]
+    public string ApiKey { get; set; } = string.Empty;
+
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyAppDemo.DataLayer.DBContext;
 
@@ -11,9 +12,11 @@ using MyAppDemo.DataLayer.DBContext;
 namespace MyAppDemo.DataLayer.Migrations
 {
     [DbContext(typeof(WebAPIDbContext))]
-    partial class WebAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250514210846_AddApiKeyToAuthorizedEmails")]
+    partial class AddApiKeyToAuthorizedEmails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

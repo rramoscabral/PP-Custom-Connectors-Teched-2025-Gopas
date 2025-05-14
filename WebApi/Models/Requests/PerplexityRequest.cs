@@ -5,6 +5,6 @@ namespace MyAppDemo.WebAPI.Models.Requests;
 /// </summary>
 public class PerplexityRequest
 {
-    public string Prompt { get; set; }
-    public string Email { get; set; }
+    public required string Prompt { get; set; }
+    public required string Email { get; set; }
 }

@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MyAppDemo.DataLayer.DBContext;
@@ -24,14 +25,30 @@ public class Program
             ?? builder.Configuration.GetConnectionString("MSPPWebAPI2025");
 
         builder.Services.AddDbContext<WebAPIDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseSqlServer(connectionString, sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null
+                );
+            }));
+
 
 
         builder.Services.AddScoped<IGitHubService, GitHubService>();
 
+        builder.Services.AddAuthentication("ApiKeyScheme")
+            .AddScheme<AuthenticationSchemeOptions, DummyApiKeyAuthenticationHandler>("ApiKeyScheme", null);
+
+
         // HttpClient dependency injection
         builder.Services.AddHttpClient<IWebhookService, WebhookService>();
         builder.Services.AddHttpClient<IPerplexityService, PerplexityService>();
+        builder.Services.AddScoped<IApiKeyValidationService, ApiKeyValidationService>();
+
+
+
 
         // OpenAPI document generation
         builder.Services.AddOpenApi();
@@ -40,9 +57,48 @@ public class Program
         builder.Services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Power Platorm Custom Connectors - Teched 2025", Version = "v1" });
+
+            // Adds security definition for API Key
+            c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            {
+                Description = "API Key needed to access the endpoints. X-API-Key: {key}",
+                In = ParameterLocation.Header,
+                Name = "X-API-Key",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "ApiKeyScheme"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "ApiKey"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
+
+        // CORS policy, allow all origins, headers, and methods
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
         });
 
         var app = builder.Build();
+
+        // CORS policy
+        app.UseCors("AllowAll");
 
 
         if (app.Environment.IsDevelopment())
@@ -66,14 +122,16 @@ public class Program
         // Logging Middleware
         app.UseMiddleware<LoggingMiddleware>();
 
-
         app.UseHttpsRedirection();
 
         app.UseRouting();
 
+
+        app.UseAuthentication();
         app.UseAuthorization();
 
-        
+
+
         app.MapControllers();
 
         app.MapSwagger().RequireAuthorization();
