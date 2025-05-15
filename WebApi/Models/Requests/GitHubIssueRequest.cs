@@ -51,8 +51,13 @@ public class GitHubRepositoryDto
     [Required]
     public GitHubUserDto Owner { get; set; }
 
-    [Required]
-    public string WebhookSecret { get; set; }
+    /**
+     * GitHub does not send the secret in the JSON body. Instead, it uses the secret to generate an HMAC signature that is sent in an HTTP header called:
+     * X-Hub-Signature(for SHA1)
+     * X-Hub-Signature-256 (for SHA256)
+     */
+    //[Required]
+    //public string WebhookSecret { get; set; }
 }
 
 public class GitHubUserDto
@@ -62,8 +67,8 @@ public class GitHubUserDto
     public string Login { get; set; }
 
     [StringLength(200)]
-    public string Avatar_Url { get; set; }
+    public string? Avatar_Url { get; set; }
 
     [StringLength(200)]
-    public string Html_Url { get; set; }
+    public string? Html_Url { get; set; }
 }

@@ -6,7 +6,12 @@ using MyAppDemo.DataLayer.DBContext; // To access the database context
 using MyAppDemo.DataLayer.Models; // To access the entity
 using MyAppDemo.WebAPI.Services; // To access the service
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Authorization; 
+using Microsoft.AspNetCore.Authorization;
+using System.Text;
+using Microsoft.AspNetCore.SignalR;
+using System.Security.Cryptography.Xml;
+using System.Reflection.Metadata;
+using System.Reflection.Emit;
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -14,16 +19,16 @@ namespace MyAppDemo.WebAPI.Controllers;
 [Route("api/[controller]")]
 public class GitHubController : ControllerBase
 {
-    
+
     private readonly IWebhookService _webhookService;
     private readonly WebAPIDbContext _context;
-    
+
     public GitHubController(IWebhookService webhookService, WebAPIDbContext context)
     {
         _webhookService = webhookService;
         _context = context;
     }
-    
+
     [HttpPost("register-repository")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -45,18 +50,18 @@ public class GitHubController : ControllerBase
         {
             OwnerName = request.OwnerName,
             RepositoryName = request.RepositoryName,
-            WebhookSecret = secret,  
+            WebhookSecret = secret,
             Email = request.Email
         };
-        
+
         _context.GitHubRepositories.Add(repository);
         await _context.SaveChangesAsync();
-        
+
 
         // Get domain dynamically
         var domain = $"{Request.Scheme}://{Request.Host}";
         var webhookUrl = $"{domain}/api/github-issue";
-        
+
         return Ok(new
         {
             Message = "Repository registered successfully",
@@ -80,25 +85,51 @@ public class GitHubController : ControllerBase
     [HttpPost("issue-webhook")]
     public async Task<IActionResult> IssueWebhook([FromBody] GitHubIssueRequest request)
     {
+
+        // X-Hub-Signature (to SHA1) || X-Hub-Signature-256 (to SHA256)
+        if (!Request.Headers.TryGetValue("X-Hub-Signature-256", out var signature))
+        {
+            return Unauthorized("Missing signature.");
+        }
+
+
+        //Request.Body.Position = 0; // Garante que estamos no início do stream
+        //using var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true);
+        //var body = await reader.ReadToEndAsync(); // Lê o corpo como string
+        //Request.Body.Position = 0; // Reposiciona para o início para que o ASP.NET possa ler de novo
+
+
+
+
+        // Check if the repository exists in the database
         var repositories = await _context.GitHubRepositories
-            .Where(r => r.OwnerName == request.Repository.Owner.Login && r.RepositoryName == request.Repository.Name && r.WebhookSecret == request.Repository.WebhookSecret)
+            .Where(r => r.OwnerName == request.Repository.Owner.Login && r.RepositoryName == request.Repository.Name)
             .ToListAsync();
 
         if (!repositories.Any())
             return NotFound("Repository not found.");
 
-        var payload = new
-        {
-            title = request.Issue.Title,
-            body = request.Issue.Body,
-            html_url = request.Issue.Html_Url,
-            user = request.Issue.User.Login,
-            repository = request.Repository.Name,
-            owner = request.Repository.Owner.Login
-        };
 
         foreach (var repo in repositories)
         {
+
+            // Validation is done in the middleware, not in the IssueWebhook method
+            //var secret = repo.WebhookSecret;
+            //if (!string.Equals(signature, $"sha256={computedSignature}", StringComparison.OrdinalIgnoreCase))
+            //    continue; // invalid signature
+
+
+            // 'Payload' is the data that will be sent to Power Automate
+            var payload = new
+            {
+                title = request.Issue.Title,
+                body = request.Issue.Body,
+                html_url = request.Issue.Html_Url,
+                user = request.Issue.User.Login,
+                repository = request.Repository.Name,
+                owner = request.Repository.Owner.Login
+            };
+
             var webhook = await _context.Webhooks
                 .FirstOrDefaultAsync(w => w.Email == repo.Email && w.Type == WebhookType.GitHub);
 
@@ -106,10 +137,12 @@ public class GitHubController : ControllerBase
                 continue;
 
             await _webhookService.TriggerWebhook(webhook.WebhookUrl, WebhookType.GitHub, payload);
+
+            // Return the payload to Power Automate
+            return Ok(payload);
         }
 
-        // Optional: Return the payload for debugging or direct use in Power Automate
-        return Ok(payload);
+        return NotFound("No webhook found for the repository.");
     }
 
 
@@ -127,10 +160,10 @@ public class GitHubController : ControllerBase
             request.WebhookUrl,
             WebhookType.GitHub,
             request.FlowId);
-            
+
         return Ok(new { Message = "Custom Connectors Webhook registered successfully" });
     }
-    
+
     /// <summary>
     /// Endpoint to remove a Custom Connectors for GitHub.
     /// </summary>
@@ -140,10 +173,10 @@ public class GitHubController : ControllerBase
     public async Task<IActionResult> RemoveWebhook(string flowId)
     {
         var result = await _webhookService.RemoveWebhook(flowId);
-        
+
         if (!result)
             return NotFound();
-            
+
         return Ok(new { Message = "Custom Connectors Webhook removed successfully" });
     }
 }

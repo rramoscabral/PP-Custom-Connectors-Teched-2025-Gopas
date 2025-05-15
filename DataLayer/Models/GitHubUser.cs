@@ -20,10 +20,10 @@ public class GitHubUser
     public string Login { get; set; }
 
     [StringLength(200)]
-    public string AvatarUrl { get; set; }
+    public string? AvatarUrl { get; set; }
 
     [StringLength(200)]
-    public string ProfileUrl { get; set; }
+    public string? ProfileUrl { get; set; }
 
     public ICollection<GitHubIssue> Issues { get; set; }
 }
