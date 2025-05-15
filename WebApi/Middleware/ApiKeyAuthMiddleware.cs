@@ -26,6 +26,16 @@ public class ApiKeyAuthMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        var path = context.Request.Path.Value;
+
+        // Bypass authentication for GitHub webhook endpoint
+        if (path != null && path.Equals("/api/github/issue-webhook", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context);
+            return;
+        }
+
+
         if (!context.Request.Headers.TryGetValue("X-API-Key", out var extractedApiKey))
         {
             context.Response.StatusCode = 401;

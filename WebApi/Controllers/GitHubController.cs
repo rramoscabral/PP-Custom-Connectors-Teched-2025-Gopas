@@ -4,9 +4,9 @@ using Newtonsoft.Json;
 using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
 using MyAppDemo.DataLayer.DBContext; // To access the database context
 using MyAppDemo.DataLayer.Models; // To access the entity
-using MyAppDemo.WebAPI.Services;
+using MyAppDemo.WebAPI.Services; // To access the service
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Authorization; // To access the service
+using Microsoft.AspNetCore.Authorization; 
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -73,10 +73,10 @@ public class GitHubController : ControllerBase
     /// Checks if there are any repositories registered with the provided owner and name.
     /// For each repository found, looks for the associated Webhook (Power Automate) and sends the issue data.
     /// Returns the main issue data as a response for dynamic use in Power Automate.
+    /// Note: [AllowAnonymous] will not working because the API Key authentication middleware runs before the ASP.NET Core authorization pipeline, and it does not check whether the endpoint should be anonymous.
     /// </summary>
     /// <param name="request">object containing the GitHub issue, repository and user data.</param>
     /// <returns>HTTP response 200 with the edit data or 404 if the repository is not found.</returns>
-    [AllowAnonymous]
     [HttpPost("issue-webhook")]
     public async Task<IActionResult> IssueWebhook([FromBody] GitHubIssueRequest request)
     {
