@@ -223,7 +223,8 @@ public class GitHubController : ControllerBase
             return Ok(payload);
         }
 
-        return NotFound("No webhook found for the repository.");
+        //return NotFound("No webhook found for the repository.");
+        return Ok(new { message = "No webhook found for the repository." });
     }
 
 
