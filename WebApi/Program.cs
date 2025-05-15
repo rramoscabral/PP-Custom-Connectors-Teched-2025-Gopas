@@ -17,11 +17,11 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddControllers();
-        
+
         builder.Services.AddAuthorization();
 
         // Add Entity Framework Core context
-        var connectionString = Environment.GetEnvironmentVariable("MSPPWebAPI2025") 
+        var connectionString = Environment.GetEnvironmentVariable("MSPPWebAPI2025")
             ?? builder.Configuration.GetConnectionString("MSPPWebAPI2025");
 
         // Only for testing purposes
@@ -100,17 +100,17 @@ public class Program
 
         var app = builder.Build();
 
-        // CORS policy
+        // 1. CORS policy
         app.UseCors("AllowAll");
 
-
+        // 2. Exception handling (dev/prod)
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
             app.UseDeveloperExceptionPage();
         }
 
-
+        // 3. Swagger (UI e JSON)
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
@@ -119,28 +119,31 @@ public class Program
         });
 
 
+        // 4. HTTPS Redirection
+        app.UseHttpsRedirection();
+
+
+        // 5. Routing
+        app.UseRouting();
+
+        // 6. Authentication/Authorization
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        // 7. Custom middlewares (always AFTER Routing/Authentication/Authorization)
+
+        // Middleware for GitHub signature validation
+        app.UseMiddleware<GitHubSignatureValidationMiddleware>();
+
         // Middleware for authentication via API Key
         app.UseMiddleware<ApiKeyAuthMiddleware>();
 
         // Logging Middleware
         app.UseMiddleware<LoggingMiddleware>();
 
-        // Middleware for GitHub signature validation
-        app.UseMiddleware<GitHubSignatureValidationMiddleware>();
 
-
-        app.UseHttpsRedirection();
-
-        app.UseRouting();
-
-
-        app.UseAuthentication();
-        app.UseAuthorization();
-
-
-
+        // 8. Endpoints
         app.MapControllers();
-
         app.MapSwagger().RequireAuthorization();
 
         app.MapGet("/", () => "Hello, TechEd 2025!");

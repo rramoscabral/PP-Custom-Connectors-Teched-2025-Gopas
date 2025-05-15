@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Cryptography.Xml;
 using System.Reflection.Metadata;
 using System.Reflection.Emit;
+using System.Web;
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -89,39 +90,39 @@ public class GitHubController : ControllerBase
     {
         _logger.LogInformation("IssueWebhook run");
 
-
-        string jsonBody = null;
-
-
-        // Read the body as text
+   
+        // Read the original request body as text
         Request.EnableBuffering();
+        string body;
         using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true))
         {
-            var body = await reader.ReadToEndAsync();
-            Request.Body.Position = 0; // Reset for ASP.NET read again
+            body = await reader.ReadToEndAsync();
+        }
+        Request.Body.Position = 0;
 
-            // Check the Content-Type
-            if (Request.ContentType != null && Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
-            {
-                // Extracting the form payload
-                var parsed = System.Web.HttpUtility.ParseQueryString(body);
-                jsonBody = parsed["payload"];
-            }
-            else if (Request.ContentType != null && Request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
-            {
-                // Body is already pure JSON
-                jsonBody = body;
-            }
-            else
-            {
-                return StatusCode(415, "Unsupported Content-Type");
-            }
+
+        // Extract JSON correctly depending on Content-Type
+        string jsonBody = null;
+        // Check the Content-Type
+        if (Request.ContentType != null && Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+        {
+            var parsed = HttpUtility.ParseQueryString(body);
+            jsonBody = parsed["payload"];
+        }
+        else if (Request.ContentType != null && Request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+        {
+            // Body is already pure JSON
+            jsonBody = body;
+        }
+        else
+        {
+            return StatusCode(415, "Unsupported Content-Type");
         }
 
-        // Deserialize JSON to DTO Requests
         if (string.IsNullOrWhiteSpace(jsonBody))
             return BadRequest("Payload is missing.");
 
+        // Deserialize JSON to DTO Requests
         GitHubIssueRequest request;
         try
         {
@@ -134,25 +135,7 @@ public class GitHubController : ControllerBase
         }
 
 
-
-        using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true))
-        {
-            var body = await reader.ReadToEndAsync();
-            Console.WriteLine(body);
-            Request.Body.Position = 0; // Reset para o ASP.NET ler de novo
-        }
-
-        // X-Hub-Signature (to SHA1) || X-Hub-Signature-256 (to SHA256)
-        if (!Request.Headers.TryGetValue("X-Hub-Signature-256", out var signature))
-        {
-            return Unauthorized("Missing signature.");
-        }
-
-
-        //Request.Body.Position = 0; // Garante que estamos no início do stream
-        //using var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true);
-        //var body = await reader.ReadToEndAsync(); // Lê o corpo como string
-        //Request.Body.Position = 0; // Reposiciona para o início para que o ASP.NET possa ler de novo
+        _logger.LogInformation("Received GitHub webhook for issue: {Title}", request.Issue?.Title);
 
 
         // Check if the repository exists in the database
