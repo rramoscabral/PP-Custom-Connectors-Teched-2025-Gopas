@@ -22,11 +22,13 @@ public class GitHubController : ControllerBase
 
     private readonly IWebhookService _webhookService;
     private readonly WebAPIDbContext _context;
+    private readonly ILogger<GitHubController> _logger;
 
-    public GitHubController(IWebhookService webhookService, WebAPIDbContext context)
+    public GitHubController(IWebhookService webhookService, WebAPIDbContext context, ILogger<GitHubController> logger)
     {
         _webhookService = webhookService;
         _context = context;
+        _logger = logger;
     }
 
     [HttpPost("register-repository")]
@@ -85,6 +87,15 @@ public class GitHubController : ControllerBase
     [HttpPost("issue-webhook")]
     public async Task<IActionResult> IssueWebhook([FromBody] GitHubIssueRequest request)
     {
+        _logger.LogInformation("IssueWebhook run");
+        _logger.LogInformation("Issue ID no controller: {Id}", request.Issue.Id);
+
+        using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true))
+        {
+            var body = await reader.ReadToEndAsync();
+            Console.WriteLine(body);
+            Request.Body.Position = 0; // Reset para o ASP.NET ler de novo
+        }
 
         // X-Hub-Signature (to SHA1) || X-Hub-Signature-256 (to SHA256)
         if (!Request.Headers.TryGetValue("X-Hub-Signature-256", out var signature))
@@ -97,8 +108,6 @@ public class GitHubController : ControllerBase
         //using var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true);
         //var body = await reader.ReadToEndAsync(); // Lê o corpo como string
         //Request.Body.Position = 0; // Reposiciona para o início para que o ASP.NET possa ler de novo
-
-
 
 
         // Check if the repository exists in the database
@@ -129,6 +138,41 @@ public class GitHubController : ControllerBase
                 repository = request.Repository.Name,
                 owner = request.Repository.Owner.Login
             };
+
+
+
+            // Check or create the user
+            var user = await _context.GitHubUsers
+             .FirstOrDefaultAsync(u => u.Login == payload.user);
+
+            if (user == null)
+            {
+                user = new GitHubUser
+                {
+                    Login = payload.user,
+                    AvatarUrl = request.Issue.User.Avatar_Url,
+                    ProfileUrl = request.Issue.User.Html_Url
+                };
+
+                _context.GitHubUsers.Add(user);
+                await _context.SaveChangesAsync();
+            }
+
+            // Create the issue based on the payload
+            var issue = new GitHubIssue
+            {
+                IssueNumber = request.Issue.Number,
+                Title = payload.title,
+                Body = payload.body,
+                Html_Url = payload.html_url,
+                CreatedAt = request.Issue.Created_At,
+                UserLogin = payload.user,
+                RepositoryId = repo.Id,
+                UserId = user.Id
+            };
+
+            _context.GitHubIssues.Add(issue);
+            await _context.SaveChangesAsync();
 
             var webhook = await _context.Webhooks
                 .FirstOrDefaultAsync(w => w.Email == repo.Email && w.Type == WebhookType.GitHub);

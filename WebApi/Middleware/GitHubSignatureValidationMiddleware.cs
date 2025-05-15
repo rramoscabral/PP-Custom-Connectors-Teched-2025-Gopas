@@ -23,9 +23,7 @@ public class GitHubSignatureValidationMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-
-
-        _logger.LogInformation("Middleware GitHubSignatureValidationMiddleware executado.");
+        _logger.LogInformation("GitHubSignatureValidationMiddleware middleware run");
 
         if (context.Request.Path.StartsWithSegments("/api/github/issue-webhook", StringComparison.OrdinalIgnoreCase))
         {
@@ -35,6 +33,8 @@ public class GitHubSignatureValidationMiddleware
             var body = await reader.ReadToEndAsync();
             context.Request.Body.Position = 0;
 
+            //_logger.LogInformation($"GitHubSignatureValidationMiddleware Body: {body}");
+
             if (!context.Request.Headers.TryGetValue("X-Hub-Signature-256", out var signatureHeader))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -42,12 +42,12 @@ public class GitHubSignatureValidationMiddleware
                 return;
             }
 
-            // Extrai o nome do repositório e owner do JSON
+            // Extract repository name and owner from JSON
             var jsonDoc = JsonDocument.Parse(body);
             var repoName = jsonDoc.RootElement.GetProperty("repository").GetProperty("name").GetString();
             var ownerLogin = jsonDoc.RootElement.GetProperty("repository").GetProperty("owner").GetProperty("login").GetString();
 
-            // Acede ao contexto da base de dados
+            // Access the database context
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WebAPIDbContext>();
 
@@ -68,7 +68,7 @@ public class GitHubSignatureValidationMiddleware
 
             if (!string.Equals(signature, expectedSignature, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogWarning("Assinatura inválida apesar de parecer igual.");
+                _logger.LogWarning("Invalid signature even though it looks the same.");
                 _logger.LogInformation("Signature header: {Header}", signature);
                 _logger.LogInformation("Expected signature: {Expected}", expectedSignature);
 
