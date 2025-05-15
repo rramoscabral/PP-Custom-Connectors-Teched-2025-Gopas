@@ -21,7 +21,7 @@ namespace MyAppDemo.WebAPI.Services
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            // This handler does nothing, as your ApiKeyAuthMiddleware already handles authentication.
+            // This handler does nothing, as ApiKeyAuthMiddleware already handles authentication.
             // It just allows the pipeline to proceed.
             var claims = new[] { new Claim(ClaimTypes.Name, "ApiKeyUser") };
             var identity = new ClaimsIdentity(claims, "ApiKeyScheme");

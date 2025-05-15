@@ -13,12 +13,15 @@ public class ApiKeyAuthMiddleware
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceProvider;
 
+    //private readonly WebAPIDbContext _dbContext;
+
 
     public ApiKeyAuthMiddleware(RequestDelegate next, IConfiguration configuration, IServiceProvider serviceProvider)
     {
         _next = next;
         _configuration = configuration;
         _serviceProvider = serviceProvider;
+        //_dbContext = dbContext;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -32,12 +35,12 @@ public class ApiKeyAuthMiddleware
 
         // Resolve WebAPIDbContext within a scope
         using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<WebAPIDbContext>();
+        var _dbContext = scope.ServiceProvider.GetRequiredService<WebAPIDbContext>();
 
 
         // Check if the API key is valid by querying the database table AuthorizedEmails.
         var apiKey = extractedApiKey.ToString();
-        var authorizedUser = await dbContext.AuthorizedEmails
+        var authorizedUser = await _dbContext.AuthorizedEmails
             .FirstOrDefaultAsync(u => u.ApiKey == apiKey);
 
         if (authorizedUser == null)

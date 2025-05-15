@@ -24,6 +24,8 @@ public class Program
         var connectionString = Environment.GetEnvironmentVariable("MSPPWebAPI2025") 
             ?? builder.Configuration.GetConnectionString("MSPPWebAPI2025");
 
+        Console.WriteLine($"Connection string: {connectionString}");
+
         builder.Services.AddDbContext<WebAPIDbContext>(options =>
             options.UseSqlServer(connectionString, sqlOptions =>
             {

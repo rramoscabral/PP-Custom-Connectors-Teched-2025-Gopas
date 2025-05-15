@@ -14,23 +14,24 @@ public class GitHubService : IGitHubService
         _context = context;
     }
 
-    public async Task AddRepositoryAsync(string ownerName, string repositoryName, string email)
+    public async Task AddRepositoryAsync(string ownerName, string repositoryName, string webhookSecret, string email)
     {
         var repo = new GitHubRepository
         {
             OwnerName = ownerName,
             RepositoryName = repositoryName,
+            WebhookSecret = webhookSecret,
             Email = email
         };
         _context.GitHubRepositories.Add(repo);
         await _context.SaveChangesAsync();
     }
 
-    public async Task RemoveRepositoryAsync(string ownerName, string repositoryName, string email)
+    public async Task RemoveRepositoryAsync(string ownerName, string repositoryName, string webhookSecret, string email)
     {
         var repo = await _context.GitHubRepositories
-            .FirstOrDefaultAsync(r => r.OwnerName == ownerName && r.RepositoryName == repositoryName && r.Email == email);
-
+            .FirstOrDefaultAsync(r => r.OwnerName == ownerName && r.RepositoryName == repositoryName && r.WebhookSecret == webhookSecret && r.Email == email);
+    
         if (repo != null)
         {
             _context.GitHubRepositories.Remove(repo);
