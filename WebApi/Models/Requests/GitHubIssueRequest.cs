@@ -50,6 +50,9 @@ public class GitHubRepositoryDto
 
     [Required]
     public GitHubUserDto Owner { get; set; }
+
+    [Required]
+    public string WebhookSecret { get; set; }
 }
 
 public class GitHubUserDto

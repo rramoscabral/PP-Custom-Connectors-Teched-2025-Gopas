@@ -5,7 +5,8 @@ using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
 using MyAppDemo.DataLayer.DBContext; // To access the database context
 using MyAppDemo.DataLayer.Models; // To access the entity
 using MyAppDemo.WebAPI.Services;
-using System.Security.Cryptography; // To access the service
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authorization; // To access the service
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -75,11 +76,12 @@ public class GitHubController : ControllerBase
     /// </summary>
     /// <param name="request">object containing the GitHub issue, repository and user data.</param>
     /// <returns>HTTP response 200 with the edit data or 404 if the repository is not found.</returns>
+    [AllowAnonymous]
     [HttpPost("issue-webhook")]
     public async Task<IActionResult> IssueWebhook([FromBody] GitHubIssueRequest request)
     {
         var repositories = await _context.GitHubRepositories
-            .Where(r => r.OwnerName == request.Repository.Owner.Login && r.RepositoryName == request.Repository.Name)
+            .Where(r => r.OwnerName == request.Repository.Owner.Login && r.RepositoryName == request.Repository.Name && r.WebhookSecret == request.Repository.WebhookSecret)
             .ToListAsync();
 
         if (!repositories.Any())
