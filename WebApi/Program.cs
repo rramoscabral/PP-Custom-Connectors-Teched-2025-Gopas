@@ -132,14 +132,16 @@ public class Program
 
         // 7. Custom middlewares (always AFTER Routing/Authentication/Authorization)
 
-        // Middleware for GitHub signature validation
-        app.UseMiddleware<GitHubSignatureValidationMiddleware>();
 
-        // Middleware for authentication via API Key
+        // Middleware 1 for authentication via API Key
         app.UseMiddleware<ApiKeyAuthMiddleware>();
 
-        // Logging Middleware
+        // Middleware 2 Logging
         app.UseMiddleware<LoggingMiddleware>();
+
+        // Middleware 3 for GitHub signature validation
+        app.UseMiddleware<GitHubSignatureValidationMiddleware>();
+
 
 
         // 8. Endpoints

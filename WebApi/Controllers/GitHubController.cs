@@ -90,7 +90,7 @@ public class GitHubController : ControllerBase
     {
         _logger.LogInformation("IssueWebhook run");
 
-   
+
         // Read the original request body as text
         Request.EnableBuffering();
         string body;

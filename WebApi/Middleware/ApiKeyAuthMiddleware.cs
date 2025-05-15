@@ -60,7 +60,7 @@ public class ApiKeyAuthMiddleware
             return;
         }
 
-        
+
         // Stores the email in context for later use
         context.Items["UserEmail"] = authorizedUser.Email;
 

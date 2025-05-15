@@ -120,7 +120,6 @@ public class GitHubSignatureValidationMiddleware
                     return;
                 }
             }
-
             await _next(context); // Only call the next one if there was no error
         }
         catch (Exception ex)
@@ -129,6 +128,7 @@ public class GitHubSignatureValidationMiddleware
             {
                 context.Response.StatusCode = 500;
                 await context.Response.WriteAsync("Internal server error.");
+                return;
             }
             _logger.LogError(ex, "An error occurred in GitHubSignatureValidationMiddleware");
         }
