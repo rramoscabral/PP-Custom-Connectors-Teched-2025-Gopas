@@ -29,11 +29,16 @@ public class GitHubSignatureValidationMiddleware
         {
             context.Request.EnableBuffering();
 
-            using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
-            var body = await reader.ReadToEndAsync();
+            // Read the original body exactly as it arrived
+            string body;
+            using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true))
+            {
+                body = await reader.ReadToEndAsync();
+            }
             context.Request.Body.Position = 0;
 
-            //_logger.LogInformation($"GitHubSignatureValidationMiddleware Body: {body}");
+            // Only for debug purposes this will contain credentials 
+            _logger.LogInformation("GitHubSignatureValidationMiddleware Body: {Body}", body);
 
             if (!context.Request.Headers.TryGetValue("X-Hub-Signature-256", out var signatureHeader))
             {
@@ -42,8 +47,44 @@ public class GitHubSignatureValidationMiddleware
                 return;
             }
 
+
+            // Use the original body to calculate the HMAC
+            // (don't extract the inner JSON if it is x-www-form-urlencoded!)
+            string signature = signatureHeader.ToString();
+
+
+            // Detect the content type and extract the JSON correctly
+            string jsonBody = null;
+            if (context.Request.ContentType != null &&
+                context.Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            {
+                var parsed = System.Web.HttpUtility.ParseQueryString(body);
+                jsonBody = parsed["payload"];
+            }
+            else if (context.Request.ContentType != null &&
+                context.Request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                jsonBody = body;
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
+                await context.Response.WriteAsync("Unsupported Content-Type");
+                return;
+            }
+
+
+            if (string.IsNullOrWhiteSpace(jsonBody))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("Payload is missing.");
+                return;
+            }
+
+
+
             // Extract repository name and owner from JSON
-            var jsonDoc = JsonDocument.Parse(body);
+            var jsonDoc = JsonDocument.Parse(jsonBody);
             var repoName = jsonDoc.RootElement.GetProperty("repository").GetProperty("name").GetString();
             var ownerLogin = jsonDoc.RootElement.GetProperty("repository").GetProperty("owner").GetProperty("login").GetString();
 
@@ -64,9 +105,11 @@ public class GitHubSignatureValidationMiddleware
             var expectedSignature = $"sha256={ComputeHmacSha256(body, repo.WebhookSecret)}";
 
 
-            var signature = signatureHeader.ToString();
 
-            if (!string.Equals(signature, expectedSignature, StringComparison.OrdinalIgnoreCase))
+            // Compare the HMAC signatures
+            if (!CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(signature),
+            Encoding.UTF8.GetBytes(expectedSignature)))
             {
                 _logger.LogWarning("Invalid signature even though it looks the same.");
                 _logger.LogInformation("Signature header: {Header}", signature);
@@ -76,9 +119,22 @@ public class GitHubSignatureValidationMiddleware
                 await context.Response.WriteAsync("Invalid signature.");
                 return;
             }
+
+
+
+            //if (!string.Equals(signature, expectedSignature, StringComparison.OrdinalIgnoreCase))
+            //{
+            //    _logger.LogWarning("Invalid signature even though it looks the same.");
+            //    _logger.LogInformation("Signature header: {Header}", signature);
+            //    _logger.LogInformation("Expected signature: {Expected}", expectedSignature);
+
+            //    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            //    await context.Response.WriteAsync("Invalid signature.");
+            //    return;
+            //}
         }
 
-        await _next(context);
+        await _next(context); // Only call the next one if there was no error
     }
 
     private static string ComputeHmacSha256(string data, string secret)

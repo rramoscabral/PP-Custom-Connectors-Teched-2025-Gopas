@@ -85,9 +85,55 @@ public class GitHubController : ControllerBase
     /// <param name="request">object containing the GitHub issue, repository and user data.</param>
     /// <returns>HTTP response 200 with the edit data or 404 if the repository is not found.</returns>
     [HttpPost("issue-webhook")]
-    public async Task<IActionResult> IssueWebhook([FromBody] GitHubIssueRequest request)
+    public async Task<IActionResult> IssueWebhook()
     {
         _logger.LogInformation("IssueWebhook run");
+
+
+        string jsonBody = null;
+
+
+        // Read the body as text
+        Request.EnableBuffering();
+        using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true))
+        {
+            var body = await reader.ReadToEndAsync();
+            Request.Body.Position = 0; // Reset for ASP.NET read again
+
+            // Check the Content-Type
+            if (Request.ContentType != null && Request.ContentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+            {
+                // Extracting the form payload
+                var parsed = System.Web.HttpUtility.ParseQueryString(body);
+                jsonBody = parsed["payload"];
+            }
+            else if (Request.ContentType != null && Request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                // Body is already pure JSON
+                jsonBody = body;
+            }
+            else
+            {
+                return StatusCode(415, "Unsupported Content-Type");
+            }
+        }
+
+        // Deserialize JSON to DTO Requests
+        if (string.IsNullOrWhiteSpace(jsonBody))
+            return BadRequest("Payload is missing.");
+
+        GitHubIssueRequest request;
+        try
+        {
+            request = JsonConvert.DeserializeObject<GitHubIssueRequest>(jsonBody);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deserializing payload");
+            return BadRequest("Invalid payload format.");
+        }
+
+
 
         using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true))
         {
