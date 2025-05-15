@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace MyAppDemo.WebAPI.Middleware;
 
 
@@ -19,6 +21,21 @@ public class LoggingMiddleware
     {
         _logger.LogInformation("Request : {method} {url}", context.Request.Method, context.Request.Path);
         await _next(context);
+
+
+        // Warning: Only do this in a development environment because this will expose sensitive data.
+        // Log the request body (only if it is application/json)
+        if (context.Request.ContentType != null && context.Request.ContentType.Contains("application/json"))
+        {
+            context.Request.EnableBuffering();
+            using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
+            var body = await reader.ReadToEndAsync();
+            context.Request.Body.Position = 0;
+            _logger.LogInformation("Request Body: {body}", body);
+        }
+
+        await _next(context);
+
         _logger.LogInformation("Response : {statusCode}", context.Response.StatusCode);
     }
 }
