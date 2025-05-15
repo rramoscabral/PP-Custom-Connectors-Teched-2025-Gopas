@@ -19,17 +19,17 @@ public class GitHubIssueRequest
 
 public class GitHubIssueDto
 {
-    [Required]
-    public int Id { get; set; }
+    // Id is from the database and not from GitHub. So, it is not required.
+    //public int Id { get; set; }
 
     [Required]
     public int Number { get; set; }
 
     [Required]
     [StringLength(200)]
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
-    public string Body { get; set; }
+    public string? Body { get; set; }
 
     [Required]
     public GitHubUserDto User { get; set; }

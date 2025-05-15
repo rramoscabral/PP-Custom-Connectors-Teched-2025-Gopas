@@ -88,7 +88,6 @@ public class GitHubController : ControllerBase
     public async Task<IActionResult> IssueWebhook([FromBody] GitHubIssueRequest request)
     {
         _logger.LogInformation("IssueWebhook run");
-        _logger.LogInformation("Issue ID no controller: {Id}", request.Issue.Id);
 
         using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true))
         {
@@ -158,21 +157,30 @@ public class GitHubController : ControllerBase
                 await _context.SaveChangesAsync();
             }
 
-            // Create the issue based on the payload
-            var issue = new GitHubIssue
-            {
-                IssueNumber = request.Issue.Number,
-                Title = payload.title,
-                Body = payload.body,
-                Html_Url = payload.html_url,
-                CreatedAt = request.Issue.Created_At,
-                UserLogin = payload.user,
-                RepositoryId = repo.Id,
-                UserId = user.Id
-            };
 
-            _context.GitHubIssues.Add(issue);
-            await _context.SaveChangesAsync();
+            // Check if the issue already exists to avoid duplicates
+            var existingIssue = await _context.GitHubIssues
+             .FirstOrDefaultAsync(i => i.IssueNumber == request.Issue.Number && i.RepositoryId == repo.Id);
+
+            if (existingIssue == null)
+            {
+                // Create the issue based on the payload
+                var issue = new GitHubIssue
+                {
+                    IssueNumber = request.Issue.Number,
+                    Title = payload.title,
+                    Body = payload.body,
+                    Html_Url = payload.html_url,
+                    CreatedAt = request.Issue.Created_At,
+                    UserLogin = payload.user,
+                    RepositoryId = repo.Id,
+                    UserId = user.Id
+                };
+
+                _context.GitHubIssues.Add(issue);
+                await _context.SaveChangesAsync();
+            }
+
 
             var webhook = await _context.Webhooks
                 .FirstOrDefaultAsync(w => w.Email == repo.Email && w.Type == WebhookType.GitHub);

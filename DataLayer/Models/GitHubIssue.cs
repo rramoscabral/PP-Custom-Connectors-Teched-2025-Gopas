@@ -20,9 +20,9 @@ public class GitHubIssue
 
     [Required]
     [StringLength(200)]
-    public string Title { get; set; }
+    public string? Title { get; set; }
 
-    public string Body { get; set; }
+    public string? Body { get; set; }
 
     [Required]
     [StringLength(100)]
