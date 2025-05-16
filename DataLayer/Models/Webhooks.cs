@@ -26,4 +26,6 @@ public class Webhook
     
     [StringLength(100)]
     public string? FlowId { get; set; }
+
+    public DateTime? LastTrigger { get; set; }
 }

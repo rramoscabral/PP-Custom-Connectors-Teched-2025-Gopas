@@ -5,7 +5,8 @@ using Newtonsoft.Json;
 using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
 using MyAppDemo.DataLayer.DBContext; // To access the database context
 using MyAppDemo.DataLayer.Models; // To access the entity
-using MyAppDemo.WebAPI.Services; // To access the service
+using MyAppDemo.WebAPI.Services;
+using Swashbuckle.AspNetCore.Annotations; // To access the service
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -29,6 +30,11 @@ public class PerplexityController : ControllerBase
     [HttpPost("generate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [SwaggerOperation(
+            Summary = "",
+            Description = "",
+            OperationId = ""
+        )]
     public async Task<IActionResult> GenerateContent([FromBody] PerplexityRequest request)
     {
         // Verificar se o e-mail está autorizado
@@ -70,6 +76,11 @@ public class PerplexityController : ControllerBase
     /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("webhook")]
+    [SwaggerOperation(
+            Summary = "",
+            Description = "",
+            OperationId = ""
+        )]
     public async Task<IActionResult> RegisterWebhook([FromBody] WebhookRegistrationRequest request)
     {
         await _webhookService.RegisterWebhook(
@@ -87,6 +98,11 @@ public class PerplexityController : ControllerBase
     /// <param name="flowId"></param>
     /// <returns></returns>
     [HttpDelete("webhook/{flowId}")]
+    [SwaggerOperation(
+            Summary = "",
+            Description = "",
+            OperationId = ""
+        )]
     public async Task<IActionResult> RemoveWebhook(string flowId)
     {
         var result = await _webhookService.RemoveWebhook(flowId);

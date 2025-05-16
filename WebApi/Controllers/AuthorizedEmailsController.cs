@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyAppDemo.DataLayer.DBContext;
 using MyAppDemo.DataLayer.Models;
+using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
+
 
 namespace MyAppDemo.WebAPI.Controllers
 {
@@ -44,6 +46,11 @@ namespace MyAppDemo.WebAPI.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Registers a new authorized user.",
+            Description = "Registers a user to a service with an API key. ",
+            OperationId = "AddAuthorizedUser"
+        )]
         public async Task<IActionResult> RegisterAuthorizedEmail([FromBody] AuthorizedEmailDto dto)
         {
             if (!ModelState.IsValid)

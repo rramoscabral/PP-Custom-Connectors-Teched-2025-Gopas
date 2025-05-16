@@ -13,6 +13,8 @@ using System.Security.Cryptography.Xml;
 using System.Reflection.Metadata;
 using System.Reflection.Emit;
 using System.Web;
+using Swashbuckle.AspNetCore.Annotations;
+using System.Net;
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -35,6 +37,11 @@ public class GitHubController : ControllerBase
     [HttpPost("register-repository")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(
+            Summary = "Register a GitHub repository",
+            Description = "Register a GitHub repository associated with a GitHub user and create a subscription to set in the GitHub Webhook.",
+            OperationId = "RegisterGitHubRepository"
+        )]
     public async Task<IActionResult> RegisterRepository([FromBody] GitHubRepositoryRequest request)
     {
 
@@ -86,6 +93,11 @@ public class GitHubController : ControllerBase
     /// <param name="request">object containing the GitHub issue, repository and user data.</param>
     /// <returns>HTTP response 200 with the edit data or 404 if the repository is not found.</returns>
     [HttpPost("issue-webhook")]
+    [SwaggerOperation(
+            Summary = "Receive a GitHub Issue via GitHub Webhook",
+            Description = "Receives a GitHub Issue via GitHub Webhook.",
+            OperationId = "GitHubIssue"
+        )]
     public async Task<IActionResult> IssueWebhook()
     {
         _logger.LogInformation("IssueWebhook run");
@@ -227,31 +239,58 @@ public class GitHubController : ControllerBase
         return Ok(new { message = "No webhook found for the repository." });
     }
 
-
-
     /// <summary>
-    /// Endpoint to register a Custom Connectors for GitHub.
+    /// Endpoint to register for Custom Connectors for GitHub.
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("webhook")]
+    [SwaggerOperation(
+            Summary = "Register the Webhook for GitHuB Custom Connectors.",
+            Description = "Registers the Webhook for the GitHub Custom Connector that will receive the issue submitted to the repository.",
+            OperationId = "AddCustomConnectorGitHubWebhook"
+        )]
     public async Task<IActionResult> RegisterWebhook([FromBody] WebhookRegistrationRequest request)
     {
+
+
         await _webhookService.RegisterWebhook(
             request.Email,
             request.WebhookUrl,
             WebhookType.GitHub,
             request.FlowId);
 
-        return Ok(new { Message = "Custom Connectors Webhook registered successfully" });
+
+        var deleteUrl = GenerateDeleteUri(Request.Scheme, Request.Host.ToString(), request.FlowId);
+
+        var obj = new
+        {
+            success = true,
+            message = "Successfully registered",
+            location = deleteUrl
+        };
+
+        return Ok(obj);
+    }
+
+
+
+    private static string GenerateDeleteUri(string scheme, string host, string flowId)
+    {
+        return $"{scheme}://{host}/api/github/webhook/{flowId}";
     }
 
     /// <summary>
     /// Endpoint to remove a Custom Connectors for GitHub.
     /// </summary>
-    /// <param name="flowId"></param>
+    /// <param name="flowId">Flow identification name of your choice</param>
     /// <returns></returns>
     [HttpDelete("webhook/{flowId}")]
+    [SwaggerOperation(
+            Summary = "Remove the Webhook for GitHuB Custom Connectors.",
+            Description = "Remove the Webhook for the GitHub Custom Connector that will receive the issue submitted to the repository.",
+            OperationId = "RemoveCustomConnectorGitHubWebhook"
+        )]
     public async Task<IActionResult> RemoveWebhook(string flowId)
     {
         var result = await _webhookService.RemoveWebhook(flowId);

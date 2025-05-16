@@ -4,9 +4,13 @@ using MyAppDemo.DataLayer.Models; // To access the entity
 
 namespace MyAppDemo.WebAPI.Services;
 
+/// <summary>
+/// Service for validating API keys.
+/// </summary>
 public class ApiKeyValidationService : IApiKeyValidationService
 {
     private readonly WebAPIDbContext _dbContext;
+
 
     public ApiKeyValidationService(WebAPIDbContext dbContext)
     {

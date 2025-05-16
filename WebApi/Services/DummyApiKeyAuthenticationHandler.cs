@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 namespace MyAppDemo.WebAPI.Services
 
 {
-
+    /// <summary>
+    /// A dummy authentication handler that does nothing.
+    /// </summary>
     public class DummyApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public DummyApiKeyAuthenticationHandler(

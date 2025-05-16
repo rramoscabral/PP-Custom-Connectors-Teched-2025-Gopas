@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using MyAppDemo.DataLayer.DBContext;
 using MyAppDemo.WebAPI.Middleware;
 using MyAppDemo.WebAPI.Services;
+using System.Reflection;
 
 namespace MyAppDemo.WebAPI;
 
@@ -85,6 +86,12 @@ public class Program
                     Array.Empty<string>()
                 }
             });
+
+            // Include XML comments
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath); // For XML comments
+            c.EnableAnnotations(); // For [SwaggerOperation]
         });
 
         // CORS policy, allow all origins, headers, and methods
