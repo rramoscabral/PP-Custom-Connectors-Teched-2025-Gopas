@@ -18,7 +18,7 @@ public class GitHubUser
     /// Identifier for the GitHub user record in the database.
     /// </summary>
     [Key]
-    public int Id { get; set; }
+    public int GitHubUserId { get; set; }
 
     /// <summary>
     /// GitHub username.

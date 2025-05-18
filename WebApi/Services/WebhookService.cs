@@ -1,9 +1,12 @@
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
+using Azure;
 using Microsoft.EntityFrameworkCore;
 using MyAppDemo.DataLayer.DBContext;
 using MyAppDemo.DataLayer.Models; // To access the entity
+using System;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using static System.Net.Mime.MediaTypeNames;
 
 
 
@@ -70,47 +73,48 @@ public class WebhookService : IWebhookService
     /// <summary>
     /// Triggers the webhook.
     /// </summary>
-    /// <param name="email"></param>
+    /// <param name="webhookID">Webook record ID from database</param>
     /// <param name="type">Webhook type PowerAutomate, GitHub, or Perplexity</param>
     /// <param name="payload">Payload</param>
     /// <returns></returns>
-    public async Task<bool> TriggerWebhook(string email, WebhookType type, object payload)
+    public async Task<bool> TriggerWebhook(int webhookID, WebhookType type, object payload)
     {
-        var webhooks = await _context.Webhooks
-            .Where(w => w.Email == email && w.Type == type)
-            .ToListAsync();
-
-        if (!webhooks.Any())
-            return false;
-
-        foreach (var webhook in webhooks)
+        try
         {
-            var content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                "application/json");
-
-
-            try
+            var webhook = await _context.Webhooks.FindAsync(webhookID);
+            if (webhook != null)
             {
+                var content = new StringContent(
+                          JsonSerializer.Serialize(payload),
+                          Encoding.UTF8,
+                          "application/json");
+
 
                 await _httpClient.PostAsync(webhook.WebhookUrl, content);
 
+                _logger.LogInformation("Sending payload to {Url}: {Payload}", webhook.WebhookUrl, content);
 
                 // Update the LastTrigger field
-                webhook.LastTrigger = DateTime.Now;
+                webhook.LastTrigger = DateTime.UtcNow;
 
                 // Save all changes at once
                 await _context.SaveChangesAsync();
-
             }
-            catch (Exception ex)
+            else
             {
-                // Logar o erro ou tomar alguma ação
-                _logger.LogError(ex, $"Error sending webhook to {webhook.WebhookUrl}");
+                _logger.LogWarning("Webhook with ID {WebhookID} not found in database.", webhookID);
+                return false;
             }
-        }
 
+        }
+        catch (Exception ex)
+        {
+            // Log the error or take some action
+            _logger.LogError(ex, $"Error sending webhook.");
+
+            //throw new Exception($"Error sending webhook to: {webhookURL}");
+            return false;
+        }
         return true;
     }
 }

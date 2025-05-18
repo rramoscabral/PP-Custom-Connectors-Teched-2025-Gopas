@@ -14,7 +14,7 @@ public class GitHubRepository
     /// GitHub repository identifier record in the database.
     /// </summary>
     [Key]
-    public int Id { get; set; }
+    public int GitHubRepoId { get; set; }
 
     /// <summary>
     /// GitHub repository owner name.
@@ -54,4 +54,17 @@ public class GitHubRepository
     /// Github issues associated with this repository.
     /// </summary>
     public ICollection<GitHubIssue> Issues { get; set; }
+
+
+    /// <summary>
+    /// Foreign key Webhook Identifier record in the database for the repository.
+    /// </summary>
+    [ForeignKey("Webhook")]
+    public int? WebhookId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the Webhook entity.
+    /// </summary>
+    public Webhook Webhook { get; set; }
+
 }

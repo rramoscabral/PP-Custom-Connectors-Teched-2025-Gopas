@@ -1,20 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
-using MyAppDemo.DataLayer.DBContext; // To access the database context
-using MyAppDemo.DataLayer.Models; // To access the entity
-using MyAppDemo.WebAPI.Services; // To access the service
-using System.Security.Cryptography;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
-using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using System.Security.Cryptography.Xml;
-using System.Reflection.Metadata;
-using System.Reflection.Emit;
-using System.Web;
+using Microsoft.EntityFrameworkCore;
+using MyAppDemo.DataLayer.DBContext; // To access the database dbcontext
+using MyAppDemo.DataLayer.Models; // To access the entity
+using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
+using MyAppDemo.WebAPI.Services; // To access the service
+using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
+using System.Net.Http;
+using System.Reflection.Emit;
+using System.Reflection.Metadata;
+using System.Security.Cryptography;
+using System.Security.Cryptography.Xml;
+using System.Text;
+using System.Web;
 
 namespace MyAppDemo.WebAPI.Controllers;
 
@@ -24,13 +26,13 @@ public class GitHubController : ControllerBase
 {
 
     private readonly IWebhookService _webhookService;
-    private readonly WebAPIDbContext _context;
+    private readonly WebAPIDbContext _dbContext;
     private readonly ILogger<GitHubController> _logger;
 
-    public GitHubController(IWebhookService webhookService, WebAPIDbContext context, ILogger<GitHubController> logger)
+    public GitHubController(IWebhookService webhookService, WebAPIDbContext dbcontext, ILogger<GitHubController> logger)
     {
         _webhookService = webhookService;
-        _context = context;
+        _dbContext = dbcontext;
         _logger = logger;
     }
 
@@ -46,7 +48,7 @@ public class GitHubController : ControllerBase
     {
 
         // Check if it already exists
-        var exists = await _context.GitHubRepositories.AnyAsync(r =>
+        var exists = await _dbContext.GitHubRepositories.AnyAsync(r =>
             r.OwnerName == request.OwnerName &&
             r.RepositoryName == request.RepositoryName);
 
@@ -64,8 +66,8 @@ public class GitHubController : ControllerBase
             Email = request.Email
         };
 
-        _context.GitHubRepositories.Add(repository);
-        await _context.SaveChangesAsync();
+        _dbContext.GitHubRepositories.Add(repository);
+        await _dbContext.SaveChangesAsync();
 
 
         // Get domain dynamically
@@ -151,8 +153,9 @@ public class GitHubController : ControllerBase
 
 
         // Check if the repository exists in the database
-        var repositories = await _context.GitHubRepositories
+        var repositories = await _dbContext.GitHubRepositories
             .Where(r => r.OwnerName == request.Repository.Owner.Login && r.RepositoryName == request.Repository.Name)
+            .Include(r => r.Webhook)
             .ToListAsync();
 
         if (!repositories.Any())
@@ -182,7 +185,7 @@ public class GitHubController : ControllerBase
 
 
             // Check or create the user
-            var user = await _context.GitHubUsers
+            var user = await _dbContext.GitHubUsers
              .FirstOrDefaultAsync(u => u.Login == payload.user);
 
             if (user == null)
@@ -194,14 +197,14 @@ public class GitHubController : ControllerBase
                     ProfileUrl = request.Issue.User.Html_Url
                 };
 
-                _context.GitHubUsers.Add(user);
-                await _context.SaveChangesAsync();
+                _dbContext.GitHubUsers.Add(user);
+                await _dbContext.SaveChangesAsync();
             }
 
 
             // Check if the issue already exists to avoid duplicates
-            var existingIssue = await _context.GitHubIssues
-             .FirstOrDefaultAsync(i => i.IssueNumber == request.Issue.Number && i.RepositoryId == repo.Id);
+            var existingIssue = await _dbContext.GitHubIssues
+             .FirstOrDefaultAsync(i => i.IssueNumber == request.Issue.Number && i.RepositoryId == repo.GitHubRepoId);
 
             if (existingIssue == null)
             {
@@ -214,25 +217,22 @@ public class GitHubController : ControllerBase
                     Html_Url = payload.html_url,
                     CreatedAt = request.Issue.Created_At,
                     UserLogin = payload.user,
-                    RepositoryId = repo.Id,
-                    UserId = user.Id
+                    RepositoryId = repo.GitHubRepoId,
+                    UserId = user.GitHubUserId
                 };
 
-                _context.GitHubIssues.Add(issue);
-                await _context.SaveChangesAsync();
+                _dbContext.GitHubIssues.Add(issue);
+                await _dbContext.SaveChangesAsync();
             }
 
+            var response  = await _webhookService.TriggerWebhook(repo.Webhook.WebhookId, WebhookType.GitHub, payload);
 
-            var webhook = await _context.Webhooks
-                .FirstOrDefaultAsync(w => w.Email == repo.Email && w.Type == WebhookType.GitHub);
+            if (response)
+            {
+                return Ok("Issue sent successfully.");
+            }
 
-            if (webhook == null)
-                continue;
-
-            await _webhookService.TriggerWebhook(webhook.WebhookUrl, WebhookType.GitHub, payload);
-
-            // Return the payload to Power Automate
-            return Ok(payload);
+            return StatusCode(500, "Failed to submit issue to webhook.");
         }
 
         //return NotFound("No webhook found for the repository.");

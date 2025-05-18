@@ -14,7 +14,7 @@ public class Webhook
     /// Identifier for the webhook record in the database.
     /// </summary>
     [Key]
-    public int Id { get; set; }
+    public int WebhookId { get; set; }
 
     /// <summary>
     /// Email address of the user who created the webhook.
@@ -41,7 +41,7 @@ public class Webhook
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Identifier for the flow in Power Automate.
+    /// Foreign Key for Webhook
     /// </summary>
     [StringLength(100)]
     public string? FlowId { get; set; }
@@ -50,4 +50,11 @@ public class Webhook
     /// Last time the webhook was triggered.
     /// </summary>
     public DateTime? LastTrigger { get; set; }
+
+
+    /// <summary>
+    /// Reverse navigation for GitHubRepository.
+    /// </summary>
+    public ICollection<GitHubRepository> Repositories { get; set; }
+
 }

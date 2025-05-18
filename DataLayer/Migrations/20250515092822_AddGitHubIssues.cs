@@ -56,14 +56,14 @@ namespace MyAppDemo.DataLayer.Migrations
                         column: x => x.RepositoryId,
                         principalSchema: "CustomConnector",
                         principalTable: "GitHubRepositories",
-                        principalColumn: "Id",
+                        principalColumn: "GitHubIssueId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_GitHubIssues_GitHubUsers_UserId",
                         column: x => x.UserId,
                         principalSchema: "CustomConnector",
                         principalTable: "GitHubUsers",
-                        principalColumn: "Id",
+                        principalColumn: "GitHubIssueId",
                         onDelete: ReferentialAction.Cascade);
                 });
 

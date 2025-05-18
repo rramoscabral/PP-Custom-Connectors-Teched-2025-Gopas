@@ -28,8 +28,8 @@ public class GitHubIssueRequest
 
 public class GitHubIssueDto
 {
-    // Id is from the database and not from GitHub. So, it is not required.
-    //public int Id { get; set; }
+    // GitHubIssueId is from the database and not from GitHub. So, it is not required.
+    //public int GitHubIssueId { get; set; }
 
     /// <summary>
     /// The unique identifier of the issue.

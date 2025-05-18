@@ -14,7 +14,7 @@ public class AuthorizedEmail
     /// Identifier for the authorized email record in the database.
     /// </summary>
     [Key]
-    public int Id { get; set; }
+    public int AuthorizedEmailId { get; set; }
 
     /// <summary>
     /// Email address of the user to be authorized.

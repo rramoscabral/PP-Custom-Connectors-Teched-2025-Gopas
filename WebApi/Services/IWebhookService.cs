@@ -27,9 +27,9 @@ public interface IWebhookService
     /// <summary>
     /// Triggers a webhook by sending a POST request to the webhook Callback URL with the specified payload.
     /// </summary>
-    /// <param name="email"></param>
+    /// <param name="webhookID"></param>
     /// <param name="type"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    Task<bool> TriggerWebhook(string email, WebhookType type, object payload);
+    Task<bool> TriggerWebhook(int webhookID, WebhookType type, object payload);
 }

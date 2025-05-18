@@ -18,7 +18,7 @@ public class GitHubIssue
     /// GitHub issue identifier record in the database.
     /// </summary>
     [Key]
-    public int Id { get; set; }
+    public int GitHubIssueId { get; set; }
 
 
     /// <summary>

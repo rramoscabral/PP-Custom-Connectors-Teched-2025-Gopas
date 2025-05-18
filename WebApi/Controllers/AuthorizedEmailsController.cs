@@ -73,7 +73,7 @@ namespace MyAppDemo.WebAPI.Controllers
             _dbContext.AuthorizedEmails.Add(authorizedEmail);
             await _dbContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(RegisterAuthorizedEmail), new { id = authorizedEmail.Id }, authorizedEmail);
+            return CreatedAtAction(nameof(RegisterAuthorizedEmail), new { id = authorizedEmail.AuthorizedEmailId }, authorizedEmail);
         }
     }
 }

@@ -24,11 +24,11 @@ namespace MyAppDemo.DataLayer.Migrations
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.AuthorizedEmail", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("AuthorizedEmailId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuthorizedEmailId"));
 
                     b.Property<string>("ApiKey")
                         .IsRequired()
@@ -46,7 +46,7 @@ namespace MyAppDemo.DataLayer.Migrations
                     b.Property<int>("Service")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("AuthorizedEmailId");
 
                     b.HasIndex("Email", "Service")
                         .IsUnique();
@@ -56,11 +56,11 @@ namespace MyAppDemo.DataLayer.Migrations
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.GitHubIssue", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("GitHubIssueId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GitHubIssueId"));
 
                     b.Property<string>("Body")
                         .HasColumnType("nvarchar(max)");
@@ -91,7 +91,7 @@ namespace MyAppDemo.DataLayer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("GitHubIssueId");
 
                     b.HasIndex("RepositoryId");
 
@@ -102,11 +102,11 @@ namespace MyAppDemo.DataLayer.Migrations
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.GitHubRepository", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("GitHubRepoId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GitHubRepoId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -126,12 +126,17 @@ namespace MyAppDemo.DataLayer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("WebhookId")
+                        .HasColumnType("int");
+
                     b.Property<string>("WebhookSecret")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.HasKey("Id");
+                    b.HasKey("GitHubRepoId");
+
+                    b.HasIndex("WebhookId");
 
                     b.HasIndex("OwnerName", "RepositoryName", "WebhookSecret", "Email")
                         .IsUnique();
@@ -141,17 +146,17 @@ namespace MyAppDemo.DataLayer.Migrations
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.GitHubUser", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("GitHubUserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GitHubUserId"));
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("Username")
+                    b.Property<string>("Login")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -160,18 +165,18 @@ namespace MyAppDemo.DataLayer.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.HasKey("Id");
+                    b.HasKey("GitHubUserId");
 
                     b.ToTable("GitHubUsers", "CustomConnector");
                 });
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.Webhook", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("WebhookId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WebhookId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -196,7 +201,7 @@ namespace MyAppDemo.DataLayer.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.HasKey("Id");
+                    b.HasKey("WebhookId");
 
                     b.HasIndex("WebhookUrl")
                         .IsUnique();
@@ -225,12 +230,26 @@ namespace MyAppDemo.DataLayer.Migrations
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.GitHubRepository", b =>
                 {
+                    b.HasOne("MyAppDemo.DataLayer.Models.Webhook", "Webhook")
+                        .WithMany("Repositories")
+                        .HasForeignKey("WebhookId");
+
+                    b.Navigation("Webhook");
+                });
+
+            modelBuilder.Entity("MyAppDemo.DataLayer.Models.GitHubRepository", b =>
+                {
                     b.Navigation("Issues");
                 });
 
             modelBuilder.Entity("MyAppDemo.DataLayer.Models.GitHubUser", b =>
                 {
                     b.Navigation("Issues");
+                });
+
+            modelBuilder.Entity("MyAppDemo.DataLayer.Models.Webhook", b =>
+                {
+                    b.Navigation("Repositories");
                 });
 #pragma warning restore 612, 618
         }
