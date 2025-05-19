@@ -20,6 +20,10 @@ using System.Web;
 
 namespace MyAppDemo.WebAPI.Controllers;
 
+
+/// <summary>
+/// GitHub
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class GitHubController : ControllerBase
@@ -36,6 +40,11 @@ public class GitHubController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Register a GitHub repository.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPost("register-repository")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -342,6 +351,6 @@ public class GitHubController : ControllerBase
         if (!result)
             return NotFound();
 
-        return Ok(new { Message = "Custom Connectors Webhook removed successfully" });
+        return Ok(new { Message = "Custom Connectors Webhook for GitHub removed successfully" });
     }
 }

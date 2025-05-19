@@ -150,14 +150,42 @@ public class Program
         app.UseMiddleware<GitHubSignatureValidationMiddleware>();
 
 
-
         // 8. Endpoints
         app.MapControllers();
         app.MapSwagger().RequireAuthorization();
 
-        app.MapGet("/", () => "Hello, TechEd 2025!");
-        app.MapGet("/api/hello", () => "Hello from the API!").RequireAuthorization();
-        app.MapGet("/api/hello/{name}", (string name) => $"Hello, {name} from the API!").RequireAuthorization();
+        app.MapGet("/", () => "Hello, TechEd 2025!")
+            .WithName("RootGreeting")
+            .WithTags("Root")
+            .WithOpenApi(op =>
+            {
+                op.Summary = "Root page.";
+                op.Description = "This endpoint returns information on the application root.";
+                return op;
+            });
+
+        app.MapGet("/api/hello", () => "Hello from the API!")
+            .RequireAuthorization()
+            .WithName("ApiGreeting")
+            .WithTags("Greetings")
+            .WithOpenApi(op =>
+            {
+                op.Summary = "API Authenticated Greeting";
+                op.Description = "This endpoint returns a greeting, but requires authentication.";
+                return op;
+            });
+
+        app.MapGet("/api/hello/{name}", (string name) =>
+         Results.Ok($"Hello, {name} from the API!"))
+         .RequireAuthorization()
+         .WithName("SayHello")
+         .WithTags("Greetings")
+         .WithOpenApi(op =>
+         {
+             op.Summary = "Say hello to a person";
+             op.Description = "This endpoint returns a custom greeting with the given name, but requires authentication.";
+             return op;
+         });
 
         app.Run();
     }

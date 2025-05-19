@@ -10,6 +10,11 @@ using Swashbuckle.AspNetCore.Annotations; // To access the service
 
 namespace MyAppDemo.WebAPI.Controllers;
 
+
+
+/// <summary>
+/// Perplexity
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PerplexityController : ControllerBase
@@ -26,14 +31,20 @@ public class PerplexityController : ControllerBase
         _httpClient = httpClient;
         _configuration = configuration;
     }
-    
+
+
+    /// <summary>
+    /// Generate AI content using Perplexity Pro API.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPost("generate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [SwaggerOperation(
-            Summary = "",
-            Description = "",
-            OperationId = ""
+            Summary = "Generate AI content using Perplexity Pro API.",
+            Description = "Generate AI content using Perplexity Pro. Every API call requires a valid API key from Perplexity Pro.",
+            OperationId = "GenerateContent"
         )]
     public async Task<IActionResult> GenerateContent([FromBody] PerplexityRequest request)
     {
@@ -75,11 +86,11 @@ public class PerplexityController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("webhook")]
+    [HttpPost("perplexity-webhook")]
     [SwaggerOperation(
-            Summary = "",
-            Description = "",
-            OperationId = ""
+            Summary = "Register the Webhook for Perplexity Custom Connectors.",
+            Description = "Registers the Webhook for the Perplexity Custom Connector.",
+            OperationId = "AddCustomConnectorPerplexityWebhook"
         )]
     public async Task<IActionResult> RegisterWebhook([FromBody] WebhookRegistrationRequest request)
     {
@@ -99,9 +110,9 @@ public class PerplexityController : ControllerBase
     /// <returns></returns>
     [HttpDelete("webhook/{flowId}")]
     [SwaggerOperation(
-            Summary = "",
-            Description = "",
-            OperationId = ""
+            Summary = "Remove the Webhook for Perplexity Custom Connectors.",
+            Description = "Remove the Webhook for the Perplexity Custom Connector.",
+            OperationId = "RemoveCustomConnectorPerplexityWebhook"
         )]
     public async Task<IActionResult> RemoveWebhook(string flowId)
     {
@@ -110,6 +121,6 @@ public class PerplexityController : ControllerBase
         if (!result)
             return NotFound();
             
-        return Ok(new { Message = "Custom Connectors Webhook removed successfully" });
+        return Ok(new { Message = "Custom Connectors Webhook for Perplexity removed successfully" });
     }
 }
