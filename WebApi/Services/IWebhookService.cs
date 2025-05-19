@@ -15,7 +15,7 @@ public interface IWebhookService
     /// <param name="type"></param>
     /// <param name="flowId"></param>
     /// <returns></returns>
-    Task<bool> RegisterWebhook(string email, string webhookUrl, WebhookType type, string flowId);
+    Task<Webhook> RegisterWebhook(string email, string webhookUrl, WebhookType type, string flowId);
 
     /// <summary>
     /// Removes a webhook based on the flowId.

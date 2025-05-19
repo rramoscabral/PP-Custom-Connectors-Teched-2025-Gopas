@@ -13,7 +13,7 @@ using static System.Net.Mime.MediaTypeNames;
 namespace MyAppDemo.WebAPI.Services;
 
 /// <summary>
-/// Service for managing webhooks.
+/// Generic webhook management service for multiple types of webhooks with Single Responsibility Principle (SRP).
 /// </summary>
 public class WebhookService : IWebhookService
 {
@@ -36,20 +36,21 @@ public class WebhookService : IWebhookService
     /// <param name="type">Webhook type PowerAutomate, GitHub, or Perplexity<</param>
     /// <param name="flowId"></param>
     /// <returns></returns>
-    public async Task<bool> RegisterWebhook(string email, string webhookUrl, WebhookType type, string flowId)
+    public async Task<Webhook> RegisterWebhook(string email, string webhookUrl, WebhookType type, string flowId)
     {
         var webhook = new Webhook
         {
             Email = email,
             WebhookUrl = webhookUrl,
             Type = type,
-            FlowId = flowId
+            FlowId = flowId,
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.Webhooks.Add(webhook);
         await _context.SaveChangesAsync();
 
-        return true;
+        return webhook;
     }
 
     /// <summary>

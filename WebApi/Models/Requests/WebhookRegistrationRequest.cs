@@ -18,4 +18,17 @@ public class WebhookRegistrationRequest
     /// Flow identification name of your choice.
     /// </summary>
     public string? FlowId { get; set; }
+
+    /// <summary>
+    /// GitHub repository owner username.
+    /// </summary>
+    public string OwnerUsername { get; set; }
+
+    /// <summary>
+    /// GitHub repository name.
+    /// </summary>
+    public string RepositoryName { get; set; }
+
+ 
+
 }

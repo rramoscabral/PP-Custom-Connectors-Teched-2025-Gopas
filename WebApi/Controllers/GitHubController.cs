@@ -229,10 +229,10 @@ public class GitHubController : ControllerBase
 
             if (response)
             {
-                return Ok("Issue sent successfully.");
+                return Ok(new { message = "Issue sent successfully." });
             }
 
-            return StatusCode(500, "Failed to submit issue to webhook.");
+            return StatusCode(500, new { message = "Failed to submit issue to webhook." });
         }
 
         //return NotFound("No webhook found for the repository.");
@@ -244,7 +244,7 @@ public class GitHubController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("webhook")]
+    [HttpPost("customconnector-webhook")]
     [SwaggerOperation(
             Summary = "Register the Webhook for GitHuB Custom Connectors.",
             Description = "Registers the Webhook for the GitHub Custom Connector that will receive the issue submitted to the repository.",
@@ -252,13 +252,29 @@ public class GitHubController : ControllerBase
         )]
     public async Task<IActionResult> RegisterWebhook([FromBody] WebhookRegistrationRequest request)
     {
+        // Search for the repository in the database
+        var repository = await _dbContext.GitHubRepositories
+            .FirstOrDefaultAsync(r =>
+            r.RepositoryName == request.RepositoryName &&
+            r.OwnerName == request.OwnerUsername);
+
+        if (repository == null)
+        {
+            return NotFound(new { Message = "Repositório não encontrado." });
+        }
 
 
-        await _webhookService.RegisterWebhook(
+
+        // Register the webhook
+        var webhook = await _webhookService.RegisterWebhook(
             request.Email,
             request.WebhookUrl,
             WebhookType.GitHub,
             request.FlowId);
+
+        repository.WebhookId = webhook.WebhookId;
+
+        await _dbContext.SaveChangesAsync();
 
 
         var deleteUrl = GenerateDeleteUri(Request.Scheme, Request.Host.ToString(), request.FlowId);
@@ -266,7 +282,7 @@ public class GitHubController : ControllerBase
         var obj = new
         {
             success = true,
-            message = "Successfully registered",
+            message = "Power Automate webhook registered successfully.",
             location = deleteUrl
         };
 
