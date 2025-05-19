@@ -57,6 +57,10 @@ public class Program
         // OpenAPI document generation
         builder.Services.AddOpenApi();
 
+        // Automatically generate OpenAPI documentation for endpoints defined with MapGet, MapPost, etc.
+        builder.Services.AddEndpointsApiExplorer();
+
+
         // Add Swagger generation
         builder.Services.AddSwaggerGen(c =>
         {
