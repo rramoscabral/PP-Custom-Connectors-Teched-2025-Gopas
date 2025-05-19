@@ -39,11 +39,11 @@ public class GitHubIssueResponse
     public required string User { get; set; }
 
     /// <summary>
-    /// GitHub repository name.
+    /// GitHub repository name as it appears in the URL..
     /// </summary>
     [Required]
     [StringLength(100)]
-    [Display(Name = "GitHub Repository name", Description = "GitHub repository name.")]
+    [Display(Name = "GitHub Repository name", Description = "GitHub repository name as it appears in the URL.")]
     public required string RepositoryName { get; set; }
 
     /// <summary>

@@ -80,11 +80,11 @@ public class GitHubIssueDto
 public class GitHubRepositoryDto
 {
     /// <summary>
-    /// GitHub repository name.
+    /// GitHub repository name as it appears in the URL.
     /// </summary>
     [Required]
     [StringLength(100)]
-    [Display(Name = "GitHub Repository name", Description = "GitHub repository name.")]
+    [Display(Name = "GitHub Repository name", Description = "GitHub repository name as it appears in the URL.")]
     public required string Name { get; set; }
 
     /// <summary>
