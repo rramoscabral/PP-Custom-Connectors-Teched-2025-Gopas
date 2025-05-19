@@ -225,7 +225,7 @@ public class GitHubController : ControllerBase
                 await _dbContext.SaveChangesAsync();
             }
 
-            var response  = await _webhookService.TriggerWebhook(repo.Webhook.WebhookId, WebhookType.GitHub, payload);
+            var response = await _webhookService.TriggerWebhook(repo.Webhook.WebhookId, WebhookType.GitHub, payload);
 
             if (response)
             {
@@ -252,43 +252,71 @@ public class GitHubController : ControllerBase
         )]
     public async Task<IActionResult> RegisterWebhook([FromBody] WebhookRegistrationRequest request)
     {
-        // Search for the repository in the database
-        var repository = await _dbContext.GitHubRepositories
+
+
+        try
+        {
+
+            // Search for the repository in the database
+            var repository = await _dbContext.GitHubRepositories
             .FirstOrDefaultAsync(r =>
             r.RepositoryName == request.RepositoryName &&
             r.OwnerName == request.OwnerUsername);
 
-        if (repository == null)
-        {
-            return NotFound(new { Message = "Repositório não encontrado." });
+            if (repository == null)
+            {
+                return NotFound(new { Message = "Repository not found." });
+            }
+
+
+            // Check if there is already a record in the database with the FlowId.
+            var existingWebhook = await _dbContext.Webhooks
+             .FirstOrDefaultAsync(w => w.FlowId == request.FlowId);
+
+            if (existingWebhook != null)
+            {
+                // Only update the CallbackUrl
+                existingWebhook.WebhookUrl = request.WebhookUrl;
+                _dbContext.Webhooks.Update(existingWebhook);
+
+                _logger.LogInformation("Webhook updated for FlowId: {FlowId}", request.FlowId);
+
+                repository.WebhookId = existingWebhook.WebhookId;
+            }
+            else
+            {
+                // Register the webhook
+                var webhook = await _webhookService.RegisterWebhook(
+                request.Email,
+                request.WebhookUrl,
+                WebhookType.GitHub,
+                request.FlowId);
+
+                _logger.LogInformation("New webhook registered for FlowId: {FlowId}", request.FlowId);
+
+                repository.WebhookId = webhook.WebhookId;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            var deleteUrl = GenerateDeleteUri(Request.Scheme, Request.Host.ToString(), request.FlowId);
+
+            var obj = new
+            {
+                success = true,
+                message = "Power Automate webhook registered successfully.",
+                location = deleteUrl
+            };
+
+            return Ok(obj);
+
         }
-
-
-
-        // Register the webhook
-        var webhook = await _webhookService.RegisterWebhook(
-            request.Email,
-            request.WebhookUrl,
-            WebhookType.GitHub,
-            request.FlowId);
-
-        repository.WebhookId = webhook.WebhookId;
-
-        await _dbContext.SaveChangesAsync();
-
-
-        var deleteUrl = GenerateDeleteUri(Request.Scheme, Request.Host.ToString(), request.FlowId);
-
-        var obj = new
+        catch (Exception ex)
         {
-            success = true,
-            message = "Power Automate webhook registered successfully.",
-            location = deleteUrl
-        };
-
-        return Ok(obj);
+            _logger.LogError(ex, "Error registering webhook for FlowId: {FlowId}", request.FlowId);
+            return StatusCode(500, new { message = "Error registering webhook." });
+        }
     }
-
 
 
     private static string GenerateDeleteUri(string scheme, string host, string flowId)
