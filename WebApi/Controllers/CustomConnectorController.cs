@@ -40,9 +40,9 @@ public class CustomConnectorController : ControllerBase
             request.WebhookUrl,
             WebhookType.PowerAutomate,
             request.FlowId);
-            
-        
-        (new { Message = "Custom Connectors Webhook registered successfully" });
+
+
+        return Ok(new { Message = "Custom Connectors Webhook registered successfully" });
     }
 
 
