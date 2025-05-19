@@ -24,18 +24,31 @@ namespace MyAppDemo.WebAPI.Controllers
         /// </summary>
         public class AuthorizedEmailDto
         {
+
+            /// <summary>
+            /// User email address.
+            /// </summary>
             [Required]
             [StringLength(100)]
             [EmailAddress]
-            public string Email { get; set; }
+            [Display(Name = "Email", Description = "User email address.")]
+            public required string Email { get; set; }
 
+            /// <summary>
+            /// Webhok service type.
+            /// </summary>
             [Required]
             [EnumDataType(typeof(ServiceType))]
+            [Display(Name = "Service type", Description = "Webhok service type.")]
             public ServiceType Service { get; set; }
 
+            /// <summary>
+            /// API Key associated with the user.
+            /// </summary>
             [Required]
             [StringLength(100)]
-            public string ApiKey { get; set; }
+            [Display(Name = "API Key", Description = "API Key associated with the user.")]
+            public required string ApiKey { get; set; }
         }
 
         /// <summary>

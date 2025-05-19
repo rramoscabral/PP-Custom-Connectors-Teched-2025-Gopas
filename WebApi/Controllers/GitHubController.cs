@@ -101,7 +101,6 @@ public class GitHubController : ControllerBase
     /// Returns the main issue data as a response for dynamic use in Power Automate.
     /// Note: [AllowAnonymous] will not working because the API Key authentication middleware runs before the ASP.NET Core authorization pipeline, and it does not check whether the endpoint should be anonymous.
     /// </summary>
-    /// <param name="request">object containing the GitHub issue, repository and user data.</param>
     /// <returns>HTTP response 200 with the edit data or 404 if the repository is not found.</returns>
     [HttpPost("issue-webhook")]
     [SwaggerOperation(

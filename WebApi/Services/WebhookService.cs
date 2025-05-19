@@ -33,7 +33,7 @@ public class WebhookService : IWebhookService
     /// </summary>
     /// <param name="email"></param>
     /// <param name="webhookUrl">Webhook Callback URL</param>
-    /// <param name="type">Webhook type PowerAutomate, GitHub, or Perplexity<</param>
+    /// <param name="type">Webhook type PowerAutomate, GitHub, or Perplexity</param>
     /// <param name="flowId"></param>
     /// <returns></returns>
     public async Task<Webhook> RegisterWebhook(string email, string webhookUrl, WebhookType type, string flowId)

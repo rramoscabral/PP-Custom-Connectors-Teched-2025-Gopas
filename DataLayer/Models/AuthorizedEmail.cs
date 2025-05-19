@@ -31,6 +31,10 @@ public class AuthorizedEmail
     [EnumDataType(typeof(ServiceType))]
     public ServiceType Service { get; set; }
 
+
+    /// <summary>
+    /// Datetime when this record was created in the database.
+    /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
