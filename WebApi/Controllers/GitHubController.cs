@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MyAppDemo.DataLayer.DBContext; // To access the database dbcontext
 using MyAppDemo.DataLayer.Models; // To access the entity
 using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
+using MyAppDemo.WebAPI.Models.Response;
 using MyAppDemo.WebAPI.Models.Responses;
 using MyAppDemo.WebAPI.Services; // To access the service
 using Newtonsoft.Json;
@@ -181,27 +182,27 @@ public class GitHubController : ControllerBase
 
 
             // 'Payload' is the data that will be sent to Power Automate
-            var payload = new
+            var payload = new GitHubIssueResponse
             {
-                title = request.Issue.Title,
-                body = request.Issue.Body,
-                html_url = request.Issue.Html_Url,
-                user = request.Issue.User.Login,
-                repository = request.Repository.Name,
-                owner = request.Repository.Owner.Login
+                Title = request.Issue.Title,
+                Body = request.Issue.Body,
+                Html_Url = request.Issue.Html_Url,
+                User = request.Issue.User.Login,
+                RepositoryName = request.Repository.Name,
+                RepositoryOwner = request.Repository.Owner.Login
             };
 
 
 
             // Check or create the user
             var user = await _dbContext.GitHubUsers
-             .FirstOrDefaultAsync(u => u.Login == payload.user);
+             .FirstOrDefaultAsync(u => u.Login == payload.User);
 
             if (user == null)
             {
                 user = new GitHubUser
                 {
-                    Login = payload.user,
+                    Login = payload.User,
                     AvatarUrl = request.Issue.User.Avatar_Url,
                     ProfileUrl = request.Issue.User.Html_Url
                 };
@@ -221,11 +222,11 @@ public class GitHubController : ControllerBase
                 var issue = new GitHubIssue
                 {
                     IssueNumber = request.Issue.Number,
-                    Title = payload.title,
-                    Body = payload.body,
-                    Html_Url = payload.html_url,
+                    Title = payload.Title,
+                    Body = payload.Body,
+                    Html_Url = payload.Html_Url,
                     CreatedAt = request.Issue.Created_At,
-                    UserLogin = payload.user,
+                    UserLogin = payload.User,
                     RepositoryId = repo.GitHubRepoId,
                     UserId = user.GitHubUserId
                 };

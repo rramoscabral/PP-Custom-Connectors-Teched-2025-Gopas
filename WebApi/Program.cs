@@ -190,17 +190,24 @@ public class Program
             });
 
         app.MapGet("/api/hello/{name}", (string name) =>
-         Results.Ok($"Hello, {name} from the API!"))
-         .RequireAuthorization()
-         .WithName("SayHello")
-         .WithTags("Greetings")
-         .Produces<HelloResponse>(StatusCodes.Status200OK)
-         .WithOpenApi(op =>
-         {
-             op.Summary = "Say hello to a person";
-             op.Description = "This endpoint returns a custom greeting with the given name, but requires authentication.";
-             return op;
-         });
+            {
+                var response = new HelloResponse
+                {
+                    Message = $"Hello, {name} from the API!"
+                };
+
+                return Results.Ok(response);
+            })
+            .RequireAuthorization()
+            .WithName("SayHello")
+            .WithTags("Greetings")
+            .Produces<HelloResponse>(StatusCodes.Status200OK)
+            .WithOpenApi(op =>
+            {
+                op.Summary = "Say hello to a person";
+                op.Description = "This endpoint returns a custom greeting with the given name, but requires authentication.";
+                return op;
+            });
 
         app.Run();
     }
