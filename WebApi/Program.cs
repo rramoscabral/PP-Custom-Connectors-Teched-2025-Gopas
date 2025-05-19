@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MyAppDemo.DataLayer.DBContext;
 using MyAppDemo.WebAPI.Middleware;
+using MyAppDemo.WebAPI.Models.Responses;
 using MyAppDemo.WebAPI.Services;
 using System.Reflection;
 
@@ -168,10 +169,19 @@ public class Program
                 return op;
             });
 
-        app.MapGet("/api/hello", () => "Hello from the API!")
+        app.MapGet("/api/hello", () =>
+            {
+                var response = new HelloResponse
+                {
+                    Message = "Hello from the API!"
+                };
+
+                return Results.Ok(response);
+            })
             .RequireAuthorization()
             .WithName("ApiGreeting")
             .WithTags("Greetings")
+            .Produces<HelloResponse>(StatusCodes.Status200OK)
             .WithOpenApi(op =>
             {
                 op.Summary = "API Authenticated Greeting";
@@ -184,6 +194,7 @@ public class Program
          .RequireAuthorization()
          .WithName("SayHello")
          .WithTags("Greetings")
+         .Produces<HelloResponse>(StatusCodes.Status200OK)
          .WithOpenApi(op =>
          {
              op.Summary = "Say hello to a person";

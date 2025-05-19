@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MyAppDemo.DataLayer.DBContext; // To access the database dbcontext
 using MyAppDemo.DataLayer.Models; // To access the entity
 using MyAppDemo.WebAPI.Models.Requests; // To access the DTO (request)
+using MyAppDemo.WebAPI.Models.Responses;
 using MyAppDemo.WebAPI.Services; // To access the service
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
@@ -258,6 +259,7 @@ public class GitHubController : ControllerBase
             Description = "Registers the Webhook for the GitHub Custom Connector that will receive the issue submitted to the repository.",
             OperationId = "AddCustomConnectorGitHubWebhook"
         )]
+    [ProducesResponseType(typeof(WebhookResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RegisterWebhook([FromBody] WebhookRegistrationRequest request)
     {
 
@@ -309,11 +311,12 @@ public class GitHubController : ControllerBase
 
             var deleteUrl = GenerateDeleteUri(Request.Scheme, Request.Host.ToString(), request.FlowId);
 
-            var obj = new
+            var obj = new WebhookResponse
             {
-                success = true,
-                message = "Power Automate webhook registered successfully.",
-                location = deleteUrl
+                Success = true,
+                Message = "Power Automate webhook registered successfully.",
+                FlowId = request.FlowId,
+                Location = deleteUrl,
             };
 
             return Ok(obj);
